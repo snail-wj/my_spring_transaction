@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<!-- 先配置连接池(jdbc，spring内置)-->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="com.mysql.jdbc.Driver"/>
+		<property name="jdbcUrl" value="jdbc:mysql:///spring_day03"/>
+		<property name="user" value="root"/>
+		<property name="password" value="root"/>
+	</bean>
+
+    <!-- 配置平台事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+	<!-- 声明式的事务(采用xml配置文件的方式)-->
+	<!--
+		第一步：在advice中配置事务，给给定的方法配置传播行为
+		第二步:配置切面，在aop中，如果是自己设置的切面是aop:aspect，如果是spring提供的则是aop:advisor
+		第三步，配置切入点，当执行到那个方法时，调用通知，则方法就增强了
+	-->
+	<!-- 先配置通知,就相当于是增强，类如当我们调用声明方法的时候，就可以调用这个通知-->
+	<tx:advice id="myAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!-- 给方法设置数据库属性(隔离级别，传播行为),从而限制某个方法的行为-->
+			<tx:method name="pay" propagation="REQUIRED"/>
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 配置AOP:如果是自己编写AOP,使用的是aop:aspect,使用的是Spring框架提供的通知，则需要aop:advisor -->
+	<aop:config>
+		<!-- aop:advice,时Spring框架提供的通知-->
+		<aop:advisor advice-ref="myAdvice" pointcut="execution(public * cn.wj.demo2.AccountServiceImpl.pay(..))"/>
+	</aop:config>
+
+	<!--
+	 配置JDBC的模板类
+	<bean id = "jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	-->
+
+	<!-- 配置业务层和持久层-->
+	<bean id="accountService" class="cn.wj.demo2.AccountServiceImpl">
+		<property name="accountDao" ref="accountDao"/>
+	</bean>
+
+	<bean id = "accountDao" class="cn.wj.demo2.AccountDaoImpl">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+</beans>

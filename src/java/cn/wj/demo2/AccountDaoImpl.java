@@ -1,6 +1,5 @@
-package cn.wj.demo1;
+package cn.wj.demo2;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 /**
